@@ -88,7 +88,7 @@ set_cookie = (name, value) ->
   domain = get_option('cookie_domain')
 
   document.cookie = [
-    encodeURIComponent(name), '=', JSON.stringify(value),
+    encodeURIComponent(name), '=', encodeURIComponent(JSON.stringify(value)),
     '; expires=' + expires.toUTCString(),
     '; domain=' + attribution_host(domain)
   ].join('')
@@ -96,7 +96,7 @@ set_cookie = (name, value) ->
 get_cookie = (name) ->
   value = "; " + document.cookie
   parts = value.split("; " + name + "=")
-  return if (parts.length == 2) then parts.pop().split(";").shift() else null
+  return if (parts.length == 2) then JSON.parse(decodeURIComponent(parts.pop().split(";").shift())) else null
 
 merge = (a, b={}) ->
   for k,v of b
@@ -107,9 +107,12 @@ guid = ->
   s4 = -> Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1)
   "#{s4()}#{s4()}-#{s4()}-#{s4()}-#{s4()}-#{s4()}#{s4()}#{s4()}"
 
+distinct_analytics_id = ->
+  get_cookie('distinct_analytics_id') || guid()
+
 main = ->
   attr_data = {
-    distinct_analytics_id: guid()
+    distinct_analytics_id: distinct_analytics_id()
   }
 
   merge(attr_data, get_first_utm())
