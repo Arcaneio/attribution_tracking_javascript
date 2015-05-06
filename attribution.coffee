@@ -67,18 +67,30 @@ queryParams = ->
   result
 
 attribution_host = (url) ->
-  return null if !url?
+  return null if !url? or url==''
+  url = "http://#{url}" unless String(url).indexOf('http')==0
   l = document.createElement("a")
   l.href = url
   l.hostname && l.hostname.replace(/^www\./i,'').toLowerCase()
 
+get_option = (key) ->
+  defaults = {
+    'cookie_domain': document.location
+  }
+
+  options = merge(defaults, window.attribution_tracking_options)
+
+  options[key]
+
 set_cookie = (name, value) ->
   expires = new Date( (new Date()).getTime() + (30 * 1000 * 60 * 60 * 24) )
+
+  domain = get_option('cookie_domain')
 
   document.cookie = [
     encodeURIComponent(name), '=', JSON.stringify(value),
     '; expires=' + expires.toUTCString(),
-    '; domain=' + attribution_host(document.location)
+    '; domain=' + attribution_host(domain)
   ].join('')
 
 get_cookie = (name) ->
@@ -86,9 +98,10 @@ get_cookie = (name) ->
   parts = value.split("; " + name + "=")
   return if (parts.length == 2) then parts.pop().split(";").shift() else null
 
-merge = (a, b) ->
+merge = (a, b={}) ->
   for k,v of b
     a[k] = v
+  a
 
 guid = ->
   s4 = -> Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1)
