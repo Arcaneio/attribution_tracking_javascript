@@ -1,11 +1,13 @@
 <html>
 <head>
   <script>
-    window.attribution_tracking_option = {
-      'cookie_domain': 'tradeshift.com'
+    window.attribution_tracking_options = {
+      'cookie_domain': '.example.com'
     }
   </script>
-  <script src="attribution.js"></script>
+  <script type="text/javascript">
+    (function() {var s = document.createElement('script'); s.type = 'text/javascript'; s.async = true; s.src = 'attribution.js'; var x = document.getElementsByTagName('script')[0]; x.parentNode.insertBefore(s, x);})();
+  </script>
 </head>
 <body>
 </body>

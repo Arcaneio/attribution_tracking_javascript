@@ -110,7 +110,7 @@ guid = ->
 distinct_analytics_id = ->
   get_cookie('distinct_analytics_id') || guid()
 
-main = ->
+calc_attribution_data = ->
   attr_data = {
     distinct_analytics_id: distinct_analytics_id()
   }
@@ -128,5 +128,68 @@ main = ->
 
   attr_data
 
+load_segment = (key=false) ->
+  return unless key
+  analytics = window.analytics = window.analytics or []
+  if !analytics.initialize
+    if analytics.invoked
+      window.console and console.error and console.error('Segment snippet included twice.')
+    else
+      analytics.invoked = !0
+      analytics.methods = [
+        'trackSubmit'
+        'trackClick'
+        'trackLink'
+        'trackForm'
+        'pageview'
+        'identify'
+        'group'
+        'track'
+        'ready'
+        'alias'
+        'page'
+        'once'
+        'off'
+        'on'
+      ]
+
+      analytics.factory = (t) ->
+        ->
+          e = undefined
+          e = Array::slice.call(arguments)
+          e.unshift t
+          analytics.push e
+          analytics
+
+      t = 0
+      while t < analytics.methods.length
+        m = analytics.methods[t]
+        analytics[m] = analytics.factory(m)
+        t++
+
+      analytics.load = (t) ->
+        s = document.createElement('script')
+        s.type = 'text/javascript'
+        s.async = !0
+        s.src = (if 'https:' == document.location.protocol then 'https://' else 'http://') + 'cdn.segment.com/analytics.js/v1/' + t + '/analytics.min.js'
+        n = document.getElementsByTagName('script')[0]
+        n.parentNode.insertBefore s, n
+        return
+
+      analytics.SNIPPET_VERSION = '3.0.1'
+      analytics.load(window.attribution_tracking_options.segment_key)
+
+main = ->
+  calc_attribution_data()
+
+  load_segment(window.attribution_tracking_options.segment_key)
+
+  analytics.identify(
+    window.current_attribution_data.distinct_analytics_id,
+    window.current_attribution_data);
+  analytics.track('Page View', {
+    attribution: window.current_attribution_data
+  });
+  analytics.page()
 
 main()
