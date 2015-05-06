@@ -1,6 +1,6 @@
 get_first_referrer = ->
   {
-    first_referrer: (get_cookie('first_referrer') || get_latest_referrer())
+    first_referrer: (get_cookie('first_referrer') || get_latest_referrer()['latest_referrer'])
   }
 
 get_latest_referrer = ->
@@ -117,8 +117,11 @@ main = ->
   merge(attr_data, get_first_referrer())
   merge(attr_data, get_latest_referrer())
 
+  window.current_attribution_data ||= {}
+
   for key, value of attr_data
     set_cookie(key, value)
+    window.current_attribution_data[key] = value
 
   attr_data
 
