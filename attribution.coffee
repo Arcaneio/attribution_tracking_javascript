@@ -75,7 +75,7 @@ attribution_host = (url) ->
 
 get_option = (key) ->
   defaults = {
-    'cookie_domain': document.location
+    'cookie_domain': attribution_host(document.location)
   }
 
   options = merge(defaults, window.attribution_tracking_options)
