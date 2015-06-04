@@ -75,7 +75,8 @@ attribution_host = (url) ->
 
 get_option = (key) ->
   defaults = {
-    'cookie_domain': attribution_host(document.location)
+    'cookie_domain':        attribution_host(document.location),
+    'identify_distinct_id': false
   }
 
   options = merge(defaults, window.attribution_tracking_options)
@@ -88,7 +89,7 @@ set_cookie = (name, value) ->
   domain = get_option('cookie_domain')
 
   document.cookie = [
-    encodeURIComponent(name), '=', encodeURIComponent(JSON.stringify(value)),
+    encodeURIComponent(name), '=', encodeURIComponent(JSON.stringify(value||null)),
     '; expires=' + expires.toUTCString(),
     '; domain=' + attribution_host(domain)
   ].join('')
@@ -96,7 +97,13 @@ set_cookie = (name, value) ->
 get_cookie = (name) ->
   value = "; " + document.cookie
   parts = value.split("; " + name + "=")
-  return if (parts.length == 2) then JSON.parse(decodeURIComponent(parts.pop().split(";").shift())) else null
+  parsed = null
+  if (parts.length == 2)
+    try
+      parsed = JSON.parse(decodeURIComponent(parts.pop().split(";").shift()))
+    parsed
+  else
+    null
 
 merge = (a, b={}) ->
   for k,v of b
@@ -184,10 +191,14 @@ main = ->
 
   load_segment(window.attribution_tracking_options.segment_key)
 
-  analytics.identify(
-    window.current_attribution_data.distinct_analytics_id,
-    window.current_attribution_data);
+  if get_option('identify_distinct_id')
+    analytics.identify(
+      window.current_attribution_data.distinct_analytics_id,
+      window.current_attribution_data);
+
   analytics.track('Page View', {
+    url: String(window.location)
+    path: String(window.location.pathname)
     attribution: window.current_attribution_data
   });
   analytics.page()
